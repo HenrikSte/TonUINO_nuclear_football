@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Nuclear Football</title>
+  <style>
+  form {
+	width: 40em;
+	border: 1px solid;
+	padding-top: .5em;
+}
+
+input {
+	padding: .5em;
+	background-color: #fffbf0;
+	border: 1px solid #e7c157;
+	width: 10em;
+}
+select {
+	padding: .5em;
+	background-color: #fffbf0;
+	border: 1px solid #e7c157;
+	width: 30em;
+}
+
+label {
+	display: inline-block;
+	width: 12em;
+	margin-bottom: 1em;
+	line-height: 2em;
+	text-align: right;
+}
+
+label::after {
+	content: ": ";
+}
+
+input:invalid {
+	border: 1px solid red;
+}
+
+button {
+	margin-left: 14.8em;
+	width: 10em;
+	margin-bottom: 1em;
+}
+</style>
+ </head>
+ <body>
+<h1>Karten-Zuweisung</h1>
+	<main>
+		<form method="POST">
+      #NEW_CARD_SELECT#
+      <button type="submit">absenden</button>
+		</form>
+	</main> 
+</body>
+</html>

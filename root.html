@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+  <meta charset="UTF-8"/>
+  <title>Nuclear Football</title>
+  <style>
+
+
+form {
+	width: 50em;
+	border: 1px solid;
+	padding-top: .5em;
+}
+
+
+fieldset {
+  border: 1px solid #e7c157;
+}
+
+input {
+	padding: .5em;
+	background-color: #fffbf0;
+	border: 1px solid #e7c157;
+	width: 10em;
+}
+select {
+	padding: .3em;
+	background-color: #fffbf0;
+	border: 1px solid #e7c157;
+	width: 30em;
+}
+
+label {
+	display: inline-block;
+	width: 12em;
+	margin-bottom: 1em;
+	line-height: 2em;
+	text-align: right;
+}
+
+label::after {
+	content: ": ";
+}
+
+input:invalid {
+	border: 1px solid red;
+}
+
+button {
+	margin-left: 1em;
+	width: 40%;
+	height: 4em;
+	margin-top: .5em;
+	margin-bottom: .5em;
+  font-size : 35px;
+  border-radius: 20px;
+  border: 5px solid #4CAF50;
+}
+</style>
+ </head>
+ <body> 
+ <h1>Nuclear Football - Startseite</h1>
+ <h2>Fernsteuerung</h2>
+  <a href="/volstart"><button>Startlautstärke</button></a>
+  <a href="/volzero"><button>Ton aus 🔇</button></a>
+  <br>
+  <a href="/vol-"><button>leiser 🔉</button></a>
+  <a href="/vol+"><button>lauter 🔊</button></a>
+  <br>
+  <a href="/start"><button>Start ▶</button></a> 
+  <a href="/stop"><button>Stop ⏹</button></a>
+  <br>
+  <a href="/disableVolume"><button>Lautstärke sperren</button></a>
+  <a href="/enableVolume"><button>Lautstärke freigeben </button></a>
+  <br>
+
+
+ <h2>Karten zuweisen</h2>
+ <p>
+   <a href="/newcards"><button>neue Karten</button></a>
+   <a href="/newfolder"><button>neue Ordner</button></a>
+   <br>
+   <a href="/allcards"><button>alle Karten</button></a>
+ </p>
+
+ 
+</body>
+</html>
