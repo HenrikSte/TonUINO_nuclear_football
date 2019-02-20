@@ -23,13 +23,14 @@
 
 
 //char testString[256];
-
-const int START_VOLUME = 6;
-const int MAX_VOLUME = 20;
-const int MIN_VOLUME = 4;
 const unsigned long WIFI_TIMEOUT = 5000; //ms
-int   volume = START_VOLUME;
+
 bool volumeEnabled = true;
+
+const uint8_t START_VOLUME = 6;
+const uint8_t MAX_VOLUME = 20;
+const uint8_t MIN_VOLUME = 4;
+uint8_t   volume = START_VOLUME;
 
       unsigned long lastStandbyCheck      = 0;
 const unsigned long standbyCheckIntervall = 1000;

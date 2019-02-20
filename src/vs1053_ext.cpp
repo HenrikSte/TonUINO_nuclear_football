@@ -158,6 +158,28 @@ void VS1053::begin()
     delay(100);
 }
 //---------------------------------------------------------------------------------------
+
+void VS1053::setVolume(uint8_t vol)
+{
+  // Set volume.  Both left and right.
+  // Input value is 0..21.  21 is the loudest.
+  // Clicking reduced by using 0xf8 to 0x00 as limits.
+  uint16_t value;                                      // Value to send to SCI_VOL
+  
+  ESP_LOGV(TAG, "Changing Volume from %d to %d", curvol , vol);
+
+  if(vol > 21) vol=21;
+
+  if(vol != curvol){
+      curvol=vol;                                      // Save for later use
+      vol=volumetable[vol];                           // Convert via table
+      value=map(vol, 0, 100, 0xF8, 0x00);              // 0..100% to one channel
+      ESP_LOGV(TAG, "Volume %d in table is %d and mapped to %d", curvol, vol, value);
+      value=(value << 8) | value;
+      write_register(SCI_VOL, value);                  // Volume left and right
+  }
+}
+/*
 void VS1053::setVolume(uint8_t vol)
 {
     // Set volume.  Both left and right.
@@ -178,6 +200,7 @@ void VS1053::setVolume(uint8_t vol)
         write_register(SCI_VOL, value);                  // Volume left and right
     }
 }
+*/
 //---------------------------------------------------------------------------------------
 void VS1053::setTone(uint8_t *rtone)
 {                    // Set bass/treble (4 nibbles)
@@ -957,9 +980,14 @@ void VS1053::loop()
 //---------------------------------------------------------------------------------------
 void VS1053::stop_mp3client(bool resetPosition)
 {
+    /*
     uint16_t actualVolume = read_register(SCI_VOL);
     write_register(SCI_VOL, 0);                             // Mute while stopping
-    
+    */
+
+    uint16_t actualVolume = getVolume();
+    setVolume(0);
+
     ESP_LOGV(TAG, "stopping song");
     stopSong();
 
@@ -1041,7 +1069,7 @@ void VS1053::stop_mp3client(bool resetPosition)
     client.flush();                                         // Flush stream client
     client.stop();                                          // Stop stream client
 
-    write_register(SCI_VOL, actualVolume);                  // restore the volume
+    setVolume(actualVolume);                  // restore the volume
 }
 //---------------------------------------------------------------------------------------
 bool VS1053::connecttohost(String host)
