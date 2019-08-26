@@ -1,7 +1,12 @@
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WiFiManager.h>  
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#else
+#include <WiFi.h>
+#include <WebServer.h>
+#include <WiFiClient.h>
+#endif
+
 #include <arduinojson.h>
 #include "ESP32FtpServer.h"
 //#include <SPI.h>
@@ -14,6 +19,7 @@
 #include <JC_Button.h>          // https://github.com/JChristensen/JC_Button
 //#include "Mp3Player/src/mp3player.h"
 #include "stringarray.h"
+#include "myautoconnect.h"
 
 #define buttonVolPlus  button5
 #define buttonVolMinus button4
@@ -486,7 +492,7 @@ void notFound()
 }
 
 
-int setVolume(int newVolume)
+void setVolume(int newVolume)
 {
   player.setVolume(newVolume);
   volume = newVolume;
@@ -786,7 +792,7 @@ void serverStart()
     server.begin();
   }
 }
-
+/*
 void wifiStart()
   {
     if (digitalRead(BUTTON_START))  
@@ -807,6 +813,34 @@ void wifiStart()
       Serial.println(WiFi.getHostname());
     }
     else
+    {
+      unsigned long waitUntil = millis() + WIFI_TIMEOUT;
+      WiFi.begin(); //
+      uint8_t status;
+      do
+      {
+        delay(150);
+        flashLed(LED_2);
+        status = WiFi.status();
+      } 
+      while ((status != WL_CONNECTED && status != WL_CONNECT_FAILED)
+             && millis()<waitUntil);
+
+    }
+
+  }
+*/
+  void wifiStart()
+  {
+    if (digitalRead(BUTTON_START))  // force WIFI cponnect portal
+    {
+      if (!autoConnectWifi(NULL, true, "tonuino"))
+      {
+        ESP.restart();
+      }
+
+    }
+    else // if button NOT pressed, try to connect for WIFI_TIMEOUT muilliseconds
     {
       unsigned long waitUntil = millis() + WIFI_TIMEOUT;
       WiFi.begin(); //

@@ -1,0 +1,41 @@
+{
+    "name": "JC_Button", 
+    "version": "2.1.1", 
+    "keywords": [
+        "signal", 
+        "input", 
+        "output"
+    ], 
+    "description": "Arduino library to debounce button switches, detect presses, releases, and long presses.", 
+    "frameworks": [
+        "arduino"
+    ], 
+    "platforms": [
+        "atmelavr"
+    ], 
+    "authors": [
+        {
+            "email": "jack.christensen@outlook.com", 
+            "url": null, 
+            "maintainer": true, 
+            "name": "Jack Christensen"
+        }
+    ], 
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/JChristensen/JC_Button"
+    }, 
+    "homepage": null, 
+    "export": {
+        "include": null, 
+        "exclude": [
+            "extras", 
+            "docs", 
+            "tests", 
+            "test", 
+            "*.doxyfile", 
+            "*.pdf"
+        ]
+    }, 
+    "id": 77
+}
