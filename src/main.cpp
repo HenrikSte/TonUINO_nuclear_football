@@ -27,6 +27,13 @@
 #define buttonStop     button2
 #define buttonRestart  button3
 
+// change next line to define how WIFI autoconnect should work
+// true:  will use autoconnect to connect to WIFI, will open webportal if wifi not available.
+// false: will use last WIFI connection for wifi. Will start normally if wifi not availabe (travel mode). 
+// In both cases hold START_BUTTON to force autoconnect portal
+#define ALWAYS_USE_AUTOCONNECT false
+
+
 
 //char testString[256];
 const unsigned long WIFI_TIMEOUT = 5000; //ms
@@ -832,9 +839,12 @@ void wifiStart()
 */
   void wifiStart()
   {
-    if (digitalRead(BUTTON_START))  // force WIFI cponnect portal
+    
+
+
+    if (ALWAYS_USE_AUTOCONNECT || digitalRead(BUTTON_START) )  // force WIFI cponnect portal
     {
-      if (!autoConnectWifi(NULL, true, "tonuino"))
+      if (!autoConnectWifi(NULL, digitalRead(BUTTON_START), "tonuino"))
       {
         ESP.restart();
       }

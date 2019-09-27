@@ -110,6 +110,7 @@ void saveIpPage() {
     Serial.print (configFileName);
 
     File f = SPIFFS.open(configFileName, "w");
+
     if (f) 
     {
       json.prettyPrintTo(Serial);
@@ -150,7 +151,26 @@ bool autoConnectWifi(AutoConnect::DetectExit_ft onDetect, bool forcePortal, cons
 {
   bool success = false;
  
-  SPIFFS.begin();
+  success = SPIFFS.begin();
+  if (!success)
+  {
+    Serial.println("Failed to open SPIFFS, formatting...");
+    success =  SPIFFS.format();
+    if (!success)
+    {
+      Serial.println("Failed to format SPIFFS.");
+    }
+    else
+    {
+      success = SPIFFS.begin();
+    }
+  }
+  
+
+  if (success)
+  {
+    Serial.println("SPIFFS ok.");
+  }
 
 
 /*
@@ -165,9 +185,11 @@ bool autoConnectWifi(AutoConnect::DetectExit_ft onDetect, bool forcePortal, cons
   String staticSubnetMask;
 
   File f = SPIFFS.open(configFileName, "r");
-  if (!f) 
+  if (!f || f.size()==0) 
   {
-    Serial.println("Configuration file not found");
+    
+    Serial.print("Configuration file not found: ");
+    Serial.println(configFileName);
   } 
   else 
   {
