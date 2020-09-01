@@ -768,6 +768,27 @@ void VS1053::nextTrack()
   }
 }
 
+void VS1053::prevTrack()
+{
+  if (m_f_localfile && mp3file)
+  {
+
+    int num = max(0,m_playlist_num-1);
+    String track = findPlaylistEntry(true, num);
+    if (track.length())
+    {
+      ESP_LOGV(TAG, "Prev entry found: %s", track.c_str());
+      playFromList(track,0);
+    }
+
+    else
+    {
+      ESP_LOGW(TAG, "Prev entry NOT found");
+    }
+    
+  }
+}
+
 void VS1053::loop()
 {
 
@@ -802,11 +823,8 @@ void VS1053::loop()
                 //close the actual file
                 mp3file.close();
 
-                //increment the entry and 
-                m_playlist_num++;
-
                 //get next file from playlist (if it exists)
-                String nextTitle = findNextPlaylistEntry();
+                String nextTitle = findPlaylistEntry(false, m_playlist_num+1);
                 if (nextTitle.length())
                 {
                   if (nextTitle.substring(nextTitle.lastIndexOf('.') + 1, nextTitle.length()).equalsIgnoreCase("mp3"))
@@ -1222,6 +1240,25 @@ bool VS1053::makeM3uFile(const String& path, const String& m3uFileName )
     return false;
 }
 
+bool VS1053::playFromList(String& actualEntry, uint32_t position)
+{
+  bool result = false;
+  //send the file to the player
+  if(actualEntry.substring(actualEntry.lastIndexOf('.') + 1, actualEntry.length()).equalsIgnoreCase("mp3"))
+  {
+      ESP_LOGI(TAG, "Playing Entry from playlist \"%s\"", actualEntry.c_str());
+
+      m_mp3title=actualEntry.substring(actualEntry.lastIndexOf('/') + 1, actualEntry.length());
+
+      result = openMp3File(actualEntry, position);
+  } 
+  else 
+  {
+      ESP_LOGW(TAG, "Invalid Entry from playlist \"%s\"", actualEntry.c_str());
+  }
+  return result;
+}
+
 
 //---------------------------------------------------------------------------------------
 bool VS1053::connecttoSD(String originalSdFile, bool resume)
@@ -1337,23 +1374,8 @@ bool VS1053::connecttoSD(String originalSdFile, bool resume)
     {
         // save the playlist path and start with the resumed entry
         m_playlist      = path;
-        m_playlist_num  = playlist;
-
-        String actualEntry = findNextPlaylistEntry(true);
-
-        //send the file to the player
-        if(actualEntry.substring(actualEntry.lastIndexOf('.') + 1, actualEntry.length()).equalsIgnoreCase("mp3"))
-        {
-            ESP_LOGI(TAG, "Playing Entry from playlist \"%s\"", actualEntry.c_str());
-
-            m_mp3title=actualEntry.substring(actualEntry.lastIndexOf('/') + 1, actualEntry.length());
-
-            result = openMp3File(actualEntry, position);
-        } 
-        else 
-        {
-            ESP_LOGW(TAG, "Invalid Entry from playlist \"%s\"", actualEntry.c_str());
-        }
+        String actualEntry = findPlaylistEntry(true, playlist);
+        playFromList(actualEntry, position);
 
         // bitFlags = SF_PLAYING_FILE | SF_PLAYING_AUDIOBOOK;
     }
@@ -1370,11 +1392,14 @@ bool VS1053::connecttoSD(String originalSdFile, bool resume)
 }
 
 
-String VS1053::findNextPlaylistEntry( bool restart )
+String VS1053::findPlaylistEntry( bool restart, int number)
 {
     fs::FS  &fs=SD;
     File     myPlaylistFile;
     String   actualEntry = "";
+
+    m_playlist_num  = number;
+
 
     ESP_LOGD(TAG, "Analysing playlist %s", m_playlist.c_str());
 
@@ -1384,19 +1409,14 @@ String VS1053::findNextPlaylistEntry( bool restart )
     {
         uint32_t actualEntryNumber = 0;
 
-        ESP_LOGD(TAG, "looking for line %u", m_playlist_num+1);
+        ESP_LOGD(TAG, "looking for line %u", number);
 
-        //read lines untill the "counter" matches the line
-        while (actualEntryNumber <= m_playlist_num)
+        //read lines until the "counter" matches the line
+        while (actualEntryNumber <= number)
         {
             //read the next line
             actualEntry = myPlaylistFile.readStringUntil('\r');
-
-            //remove whitespaces
             actualEntry.trim();
-
-            //
-            actualEntryNumber++;
 
             //check if we have reached the end of the list without finding our number
             if ((actualEntry.length() == 0) && (myPlaylistFile.available() == false))
@@ -1421,6 +1441,7 @@ String VS1053::findNextPlaylistEntry( bool restart )
             {
                 ESP_LOGV(TAG, "Read playlist entry %u: \"%s\"", actualEntryNumber, actualEntry.c_str());
             }
+            actualEntryNumber++;
         };
 
         myPlaylistFile.close();

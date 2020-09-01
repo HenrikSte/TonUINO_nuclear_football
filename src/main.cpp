@@ -21,11 +21,11 @@
 #include "stringarray.h"
 #include "myautoconnect.h"
 
-#define buttonVolPlus  button5
-#define buttonVolMinus button4
-#define buttonStart    button1
-#define buttonStop     button2
-#define buttonRestart  button3
+#define buttonStartStop  button1
+#define buttonPrev       button2
+#define buttonNext       button3
+#define buttonVolMinus   button4
+#define buttonVolPlus    button5
 
 // change next line to define how WIFI autoconnect should work
 // true:  will use autoconnect to connect to WIFI, will open webportal if wifi not available.
@@ -36,7 +36,7 @@
 
 
 //char testString[256];
-const unsigned long WIFI_TIMEOUT = 5000; //ms
+const unsigned long WIFI_TIMEOUT = 30000; //ms
 
 bool volumeEnabled = true;
 
@@ -842,9 +842,9 @@ void wifiStart()
     
 
 
-    if (ALWAYS_USE_AUTOCONNECT || digitalRead(BUTTON_START) )  // force WIFI cponnect portal
+    if (ALWAYS_USE_AUTOCONNECT || digitalRead(BUTTON_STARTSTOP) )  // force WIFI cponnect portal
     {
-      if (!autoConnectWifi(NULL, digitalRead(BUTTON_START), "tonuino"))
+      if (!autoConnectWifi(NULL, digitalRead(BUTTON_STARTSTOP), "tonuino"))
       {
         ESP.restart();
       }
@@ -908,40 +908,42 @@ void wifiStart()
       }
     }
 
-    if (buttonStop.pressedFor(100))
+    if (buttonStartStop.wasPressed())
     {
       resetStandbyTimer();
-      flashLed(LED_STOP);
-      player.stop_mp3client();
-    }
-
-    if (buttonStart.pressedFor(100))
-    {
-      resetStandbyTimer();
-      flashLed(LED_START);
+      flashLed(LED_STARTSTOP);
       if (!player.isPlaying())
       {
         player.connecttoSD(lastTrack,true); // same track, resume
       }
       else
       { 
-        if (buttonStart.timeSinceLastChange()<200)
-        {
-          player.nextTrack();
-        }
+        // STOP
+        resetStandbyTimer();
+        flashLed(LED_STARTSTOP);
+        player.stop_mp3client();
+
       }
     }
 
-    if (buttonRestart.pressedFor(100))
+    if (buttonNext.wasPressed())
     {
       resetStandbyTimer();
-      if (!player.isPlaying())
+      if (player.isPlaying())
       {
-        if (lastTrack.length())
-        {
-          flashLed(LED_RESTART);
-          player.connecttoSD(lastTrack,false); // same track, start from the beginnig
-        }
+        flashLed(LED_NEXT);
+        player.nextTrack();
+      }
+    }
+
+
+    if (buttonPrev.wasPressed())
+    {
+      resetStandbyTimer();
+      if (player.isPlaying())
+      {
+        flashLed(LED_PREV);
+        player.prevTrack();
       }
     }
 
@@ -1037,12 +1039,12 @@ void setup(void){
   }
   else
   {
-  led(LED_2,true);
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(WiFi.SSID().c_str());
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+    led(LED_2,true);
+    Serial.println("");
+    Serial.print("Connected to ");
+    Serial.println(WiFi.SSID().c_str());
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
   
 

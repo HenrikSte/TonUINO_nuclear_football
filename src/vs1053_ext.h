@@ -165,6 +165,7 @@ class VS1053
     uint8_t  getVolume();                               // Get the current volume setting, higher is louder.
     bool     isPlaying();
     void     nextTrack();
+    void     prevTrack();
     void     printDetails();                            // Print configuration details to serial output.
     bool     printVersion();                            // Print ID and version of vs1053 chip
     void     softReset() ;                              // Do a soft reset
@@ -172,7 +173,9 @@ class VS1053
     uint16_t ringused();
     bool     connecttohost(String host);
     bool	   connecttoSD(String originalSdFile, bool resume = false);
-    String   findNextPlaylistEntry( bool restart = false );
+    String   findPlaylistEntry( bool restart, int number);
+    bool     playFromList(String& actualEntry, uint32_t position);
+
     bool     connecttospeech(String speech, String lang);
     inline uint8_t getDatamode(){
        	return m_datamode;

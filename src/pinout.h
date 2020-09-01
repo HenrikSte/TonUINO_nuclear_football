@@ -26,9 +26,9 @@
 #define BUTTON_BLUE   BUTTON_4
 #define BUTTON_WHITE  BUTTON_5
 
-#define BUTTON_START     BUTTON_1
-#define BUTTON_STOP      BUTTON_2
-#define BUTTON_RESTART   BUTTON_3
+#define BUTTON_STARTSTOP BUTTON_1
+#define BUTTON_PREV      BUTTON_2
+#define BUTTON_NEXT      BUTTON_3
 #define BUTTON_VOL_PLUS  BUTTON_4
 #define BUTTON_VOL_MINUS BUTTON_5
 
@@ -45,10 +45,10 @@
 #define LED_BLUE   LED_4
 #define LED_WHITE  LED_5
 
-#define LED_START       LED_1
-#define LED_STOP        LED_2
-#define LED_RESTART     LED_3
-#define LED_VOL_MINUS    LED_4
-#define LED_VOL_PLUS   LED_5
+#define LED_STARTSTOP   LED_1
+#define LED_PREV        LED_2
+#define LED_NEXT        LED_3
+#define LED_VOL_MINUS   LED_4
+#define LED_VOL_PLUS    LED_5
 
  

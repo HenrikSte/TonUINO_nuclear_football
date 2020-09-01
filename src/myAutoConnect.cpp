@@ -70,7 +70,7 @@ static const char AUX_IPCONFIG[] PROGMEM = R"(
 }
 )";
 
-
+/*
 void saveIpPage() {
   // Retrieve the value of AutoConnectElement with arg function of WebServer class.
   // Values are accessible with the element name.
@@ -141,6 +141,7 @@ void saveIpPage() {
   acServer.client().flush();
   acServer.client().stop();
 }
+*/
 
 void rootPage() 
 {
@@ -151,87 +152,6 @@ bool autoConnectWifi(AutoConnect::DetectExit_ft onDetect, bool forcePortal, cons
 {
   bool success = false;
  
-  success = SPIFFS.begin();
-  if (!success)
-  {
-    Serial.println("Failed to open SPIFFS, formatting...");
-    success =  SPIFFS.format();
-    if (!success)
-    {
-      Serial.println("Failed to format SPIFFS.");
-    }
-    else
-    {
-      success = SPIFFS.begin();
-    }
-  }
-  
-
-  if (success)
-  {
-    Serial.println("SPIFFS ok.");
-  }
-
-
-/*
-  std::unique_ptr<AutoConnect> _Portal(new AutoConnect(acServer));
-  std::unique_ptr<AutoConnectAux> _Ip(new AutoConnectAux);
-
-  AutoConnect &  Portal = *_Portal.get();
-  AutoConnectAux &  Ip  = *_Ip.get();
-*/ 
-  String staticIp;
-  String staticGateway;
-  String staticSubnetMask;
-
-  File f = SPIFFS.open(configFileName, "r");
-  if (!f || f.size()==0) 
-  {
-    
-    Serial.print("Configuration file not found: ");
-    Serial.println(configFileName);
-  } 
-  else 
-  {
-    size_t size = f.size();
-    // Allocate a buffer to store contents of the file.
-    std::unique_ptr<char[]> buf(new char[size]);
-
-    f.readBytes(buf.get(), size);
-    f.close();
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& json = jsonBuffer.parseObject(buf.get());
-    if (!json.success()) 
-    {
-      Serial.println(configFileName);
-      Serial.println("JSON parseObject() failed\n");
-    }
-    else
-    {
-      json.prettyPrintTo(Serial);
-
-      if (json.containsKey("ip")) 
-      {
-        staticIp = (const char*)json["ip"];      
-      }
-      if (json.containsKey("gw")) 
-      {
-        staticGateway = (const char*)json["gw"];      
-      }
-      if (json.containsKey("sn")) 
-      {
-        staticSubnetMask = (const char*)json["sn"];      
-      }
-      Serial.println("\nConfig file was successfully parsed\n");
-    }
-    
-  }
-
-  IPAddress _ip,_gw,_sn;
-  _ip.fromString(staticIp);
-  _gw.fromString(staticGateway);
-  _sn.fromString(staticSubnetMask); 
-  
   Config.apip = IPAddress(192,168,4,1);      // Sets SoftAP IP address
   Config.gateway = IPAddress(192,168,4,1);     // Sets WLAN router IP address
   Config.netmask = IPAddress(255,255,255,0);    // Sets WLAN scope
@@ -240,9 +160,11 @@ bool autoConnectWifi(AutoConnect::DetectExit_ft onDetect, bool forcePortal, cons
   Config.retainPortal = true;                   // Retains the portal function after timed-out
   //Config.homeUri = "/index.html";               // Sets home path of the sketch application
   //Config.title ="My menu";                      // Customize the menu title
+/*
   Config.staip = _ip;      // Sets static IP
   Config.staGateway = _gw;  // Sets WiFi router address
   Config.staNetmask = _sn; // Sets WLAN scope
+*/
   //Config.dns1 = IPAddress(192,168,150,1);        // Sets primary DNS address
   Config.immediateStart = forcePortal;
 //  Config.uptime = 10000;
@@ -260,7 +182,7 @@ bool autoConnectWifi(AutoConnect::DetectExit_ft onDetect, bool forcePortal, cons
 
   // Behavior a root path of ESP8266WebServer.
   acServer.on("/", rootPage);
-  acServer.on("/saveip", saveIpPage); 
+  //acServer.on("/saveip", saveIpPage); 
   if (onDetect) 
   {
     Portal.onDetect(onDetect);  // Register onDetect exit routine.
