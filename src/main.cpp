@@ -172,6 +172,7 @@ void flashLed(int pin, unsigned long time = BLINK_TIME)
   }
 }
 
+
 void getFileList(fs::FS &fs, StringArray* array, const char * dirname, uint8_t levels, bool onlyDirAndM3U =true)
 {
     lastGetFileList= millis();
@@ -213,9 +214,27 @@ void getFileList(fs::FS &fs, StringArray* array, const char * dirname, uint8_t l
     }
 }
 
+void updateFileListFile()
+{
+  std::unique_ptr<StringArray> array(new StringArray);
+  unsigned long msStart =millis();
+  getFileList(SD, array.get(), "/",10);
+  fs::File file = SD.open(dirFileName,"w");
+  if (file)
+  {
+    array.get()->save(&file);
+    file.close();
+  }
+  array.get()->free();
+
+  ESP_LOGV(TAG, "updateFileListFile: %lums", millis()-msStart);
+}
+
+
 
 void saveAssignPage(StringArray* array, const char * fileName, bool allCards)
 {
+  unsigned long startMs = millis();
   String page;
   if (SD.exists(mainPageFileName))
   {
@@ -227,6 +246,7 @@ void saveAssignPage(StringArray* array, const char * fileName, bool allCards)
         page += (char)file.read();
       }
       file.close();
+      unsigned long readMs = millis();
       
       file = SD.open(fileName,"w");
       if (file)
@@ -235,64 +255,72 @@ void saveAssignPage(StringArray* array, const char * fileName, bool allCards)
         if (pos>0)
         {
           file.write((const uint8_t*)page.c_str(), pos);
+          Serial.print("saveAssignPage: Outer loop (card) count: ");
+          Serial.println(cardData.getCardCount());
 
           for (int cardIdx=0; cardIdx<cardData.getCardCount(); cardIdx++)
           {
             Card& card = cardData.getCard(cardIdx);
             if (!card.isDeleted && card.ID.length())
             {
-              String select = CARD_SELECT;
-              String cardId = card.ID;
-              select.replace(CARD_ID, cardId);
 
-              if (card.ID.equals(lastCardId))
+              if (allCards || !array->hasItem(card.track))
               {
-                cardId = "<b>" + cardId + "</b>";
-              }
-              select.replace(CARD_ID_LEGEND, cardId);
+                Serial.print("processing...");
+                Serial.println(card.ID);
+                String select = CARD_SELECT;
+                String cardId = card.ID;
+                select.replace(CARD_ID, cardId);
 
-              String options;
-              bool foundOption=false;
-
-              for (int item=0; item < array->getCount(); item++)
-              {
-                String option = OPTION;
-                const String& track = array->getItem(item);
-
-                String printableTrack = StringArray::convertToUTF8(track);
-                //String htmlTrack = StringArray::convertToHTML(printableTrack);
-                //option.replace(TRACK_NAME, htmlTrack);
-                option.replace(TRACK_NAME, printableTrack);
-                option.replace(TRACK_IDX, String(item));
-                if (card.track.equalsIgnoreCase(track))
+                if (card.ID.equals(lastCardId))
                 {
-                  Serial.print("\tfound option for card  ");
+                  cardId = "<b>" + cardId + "</b>";
+                }
+                select.replace(CARD_ID_LEGEND, cardId);
+
+                String options;
+                bool foundOption=false;
+
+                for (int item=0; item < array->getCount(); item++)
+                {
+                  String option = OPTION;
+                  const String& track = array->getItem(item);
+
+                  String printableTrack = StringArray::convertToUTF8(track);
+                  //String htmlTrack = StringArray::convertToHTML(printableTrack);
+                  //option.replace(TRACK_NAME, htmlTrack);
+                  option.replace(TRACK_NAME, printableTrack);
+                  option.replace(TRACK_IDX, String(item));
+                  if (track.length() && card.track.equalsIgnoreCase(track))
+                  {
+                    Serial.print("\tfound option for card  ");
+                    Serial.print(card.ID);
+                    Serial.print(": ");
+                    Serial.println(track);
+                    foundOption=true;
+                    option.replace(SELECTED, "selected");
+                  }
+                  else
+                  {
+                    option.replace(SELECTED, "");
+                  }
+                  options+=option + "\r\n";
+
+                }
+
+                if (!foundOption)
+                {
+                  Serial.print("\tNo option found for card ");
                   Serial.print(card.ID);
                   Serial.print(": ");
-                  Serial.println(track);
-                  foundOption=true;
-                  option.replace(SELECTED, "selected");
+                  Serial.println(card.track);
                 }
-                else
+
+                if (allCards || !foundOption) 
                 {
-                  option.replace(SELECTED, "");
+                  select.replace(OPTIONS, options);
+                  file.print(select.c_str());
                 }
-                options+=option + "\r\n";
-
-              }
-
-              if (!foundOption)
-              {
-                Serial.print("\tNo option found for card ");
-                Serial.print(card.ID);
-                Serial.print(": ");
-                Serial.println(card.track);
-              }
-
-              if (allCards || !foundOption) 
-              {
-                select.replace(OPTIONS, options);
-                file.print(select.c_str());
               }
             }
           }
@@ -593,25 +621,26 @@ void serverStart()
       sendMainPage();
     });
 
+    server.on("/reload", HTTP_GET, [](){
+      Serial.println("reload");
+      updateFileListFile();
+      sendMainPage();
 
+    });
 
     server.on("/allcards", HTTP_GET, [](){
         ESP_LOGV(TAG, "allcards, free heap: %lu", ESP.getFreeHeap());
         std::unique_ptr<StringArray> array(new StringArray);
         unsigned long msStart =millis();
         bool loaded = false;
-        /*
-        if (lastGetFileList && (lastGetFileList + getFileListValidFor > millis()))
+        fs::File file = SD.open(dirFileName, "r");
+        if (file)
         {
-          fs::File file = SD.open(dirFileName, "r");
-          if (file)
-          {
-            array.get()->load(&file);
-            loaded=true;
-            file.close();
-          }
+          array.get()->load(&file);
+          loaded=true;
+          file.close();
         }
-        */
+
         if (!loaded)
         {
           getFileList(SD, array.get(), "/",10);
@@ -621,17 +650,20 @@ void serverStart()
         unsigned long msSave = millis();
         saveAssignPage(array.get(), tmpFileName, true);
         unsigned long msStream = millis();
-        fs::File file = SD.open(tmpFileName);
+        
+        file = SD.open(tmpFileName);
         if (file)
         {
           server.streamFile(file,"text/html");
           file.close();
+/*
           file = SD.open(dirFileName,"w");
           if (file)
           {
             array.get()->save(&file);
             file.close();
           }
+*/          
         }
         else
         {
@@ -651,18 +683,17 @@ void serverStart()
           std::unique_ptr<StringArray> array(new StringArray);
           unsigned long msStart =millis();
           bool loaded = false;
-/*
-          if (lastGetFileList && (lastGetFileList + getFileListValidFor > millis()))
+          fs::File file = SD.open(dirFileName, "r");
+          if (file)
           {
-            fs::File file = SD.open(dirFileName, "r");
-            if (file)
-            {
-              array.get()->load(&file);
-              loaded=true;
-              file.close();
-            }
+            array.get()->load(&file);
+            loaded=true;
+            Serial.print("loaded number of files/dirs: ");
+            int count = array.get()->getCount();
+            Serial.println(count);
+
+            file.close();
           }
-*/          
           if (!loaded)
           {
             getFileList(SD, array.get(), "/",10);
@@ -670,20 +701,23 @@ void serverStart()
 
           unsigned long msSort = millis();
           array.get()->sort();
+
           unsigned long msSave = millis();
           saveAssignPage(array.get(), tmpFileName, false);
           unsigned long msStream = millis();
-          fs::File file = SD.open(tmpFileName);
+          file = SD.open(tmpFileName);
           if (file)
           {
             server.streamFile(file,"text/html");
             file.close();
+/*            
             file = SD.open(dirFileName,"w");
             if (file)
             {
               array.get()->save(&file);
               file.close();
             }
+*/            
           }
           else
           {

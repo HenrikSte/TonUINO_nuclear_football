@@ -21,17 +21,29 @@
     {
       strings[i]="";
     }
+    count=0;
   }
 
-
+const int bufSize = 1500;
+unsigned char buffer[bufSize];
 
   bool StringArray::save(fs::File* file)
   {
     if (file)
     {
-      for (int i=0; i<count; i++)
+      for (int x=0; x<count; x++)
       {
-        file->println(strings[i]);
+        //file->println(strings[i]);
+        buffer[0]=0;
+        strings[x].getBytes(buffer,bufSize,0); 
+      
+        int bi=0;
+        while (buffer[bi])
+        {
+          file->write(buffer[bi]);
+          bi++;
+        }
+        file->println();
       }
       return true;
     }
@@ -217,3 +229,25 @@ String StringArray::convertToUTF8(const String& s)
   return str;
 } 
 
+void StringArray::print()
+{
+  for (int i=0; i<count; i++)
+  {
+    Serial.println(strings[i]);
+  }
+}
+
+const bool StringArray::hasItem(const String& string)
+{
+  if (string.length())
+  {
+    for (int i=0; i<count; i++)
+    {
+      if (strings[i].length() && strings[i].equalsIgnoreCase(string))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+} 

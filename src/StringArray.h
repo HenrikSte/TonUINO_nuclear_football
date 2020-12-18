@@ -27,9 +27,13 @@ public:
   bool add(const String& string);
   bool save(fs::File* file);
   bool load(fs::File* file);
+  const bool hasItem(const String& string); 
+
   const String& getItem(int idx) { return strings[idx]; }
   int  getItemUTF8(const String& search);
   void free();
+
+  void print();
 
   static String convertToUTF8(const String& s);
   static String convertToHTML(const String& s);
