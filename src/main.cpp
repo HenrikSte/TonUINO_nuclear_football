@@ -744,6 +744,8 @@ void serverStart()
 
           Serial.print("loaded dirFile, found entries:");
           Serial.println(array.get()->getCount());
+          array.get()->sort();
+          Serial.println("sorted");
 
           file.close();
           Serial.print("Arguments: ");
